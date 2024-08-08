@@ -1,8 +1,7 @@
 import bodyParser from "body-parser";
 import express, { Express } from "express";
 
-import serverConfig from "./config/server.config";
-import logger from "./config/logger.config";
+import { serverConfig, logger } from './config';
 
 const app: Express = express();
 app.use(bodyParser.json());
