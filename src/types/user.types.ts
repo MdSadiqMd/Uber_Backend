@@ -9,4 +9,5 @@ export interface IUser extends Document {
         type: 'Point';
         coordinates: [number, number];
     };
+    comparePassword(candidatePassword: string): Promise<boolean>;
 }
