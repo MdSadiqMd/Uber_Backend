@@ -2,17 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 import { User } from '../models';
-import { IUser } from '../types';
+import { logger } from '../config';
 
 interface JwtPayload {
     id: string;
 }
 
-interface AuthRequest extends Request {
-    user?: IUser | null;
-}
-
-const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) {
         return res.status(401).send('Access Denied');
@@ -27,6 +23,7 @@ const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunctio
         req.user = user;
         next();
     } catch (error) {
+        logger.error(`Error in auth Middleware: ${error}`);
         res.status(400).send('Invalid Token');
     }
 };

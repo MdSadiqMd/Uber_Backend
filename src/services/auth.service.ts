@@ -14,20 +14,22 @@ interface AuthResponse {
     token: string;
 }
 
-const register = async (userData: IUser): Promise<AuthResponse> => {
-    const user = new User(userData);
-    await user.save();
-    const token = jwt.sign({ id: user._id }, serverConfig.JWT_SECRET as string, { expiresIn: '1h' });
-    return { user, token };
-};
-
-const login = async ({ email, password }: LoginData): Promise<AuthResponse> => {
-    const user = await User.findOne({ email }) as IUser | null;
-    if (!user || !(await user.comparePassword(password))) {
-        throw new Error('Invalid email or password');
+class AuthService {
+    async registerUser(userData: IUser): Promise<AuthResponse> {
+        const user = new User(userData);
+        await user.save();
+        const token = jwt.sign({ id: user._id }, serverConfig.JWT_SECRET as string, { expiresIn: '1h' });
+        return { user, token };
     }
-    const token = jwt.sign({ id: user._id }, serverConfig.JWT_SECRET as string, { expiresIn: '1h' });
-    return { user, token };
-};
 
-export const authService = { register, login };
+    async loginUser({ email, password }: LoginData): Promise<AuthResponse> {
+        const user = await User.findOne({ email }) as IUser | null;
+        if (!user || !(await user.comparePassword(password))) {
+            throw new Error('Invalid email or password');
+        }
+        const token = jwt.sign({ id: user._id }, serverConfig.JWT_SECRET as string, { expiresIn: '1h' });
+        return { user, token };
+    }
+}
+
+export default AuthService;

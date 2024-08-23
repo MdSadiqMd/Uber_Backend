@@ -3,5 +3,5 @@ import { IBooking } from './booking.types';
 
 export {
     IUser,
-    IBooking
+    IBooking,
 };
