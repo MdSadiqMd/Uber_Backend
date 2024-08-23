@@ -1,13 +1,13 @@
-import redis from 'redis';
+import { createClient } from 'redis';
 
 import logger from './logger.config';
 
-const redisClient = redis.createClient({
+const redisClient = createClient({
     url: process.env.REDIS_URI as string,
 });
 
 redisClient.on('connect', () => {
-    logger.info(`Connected to Redis`);
+    logger.info('Connected to Redis from Config');
 });
 
 redisClient.on('error', (error: Error) => {
