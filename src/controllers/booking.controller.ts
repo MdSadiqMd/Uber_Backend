@@ -9,7 +9,7 @@ import { logger, redisClient } from '../config';
 const bookingService = new BookingService();
 
 export const bookingController = {
-    createBooking: (oi: any) => async (req: Request, res: Response) => {
+    createBooking: (socket: any) => async (req: Request, res: Response) => {
         try {
             const { source, destination } = req.body;
             const user = req.user;
@@ -46,7 +46,6 @@ export const bookingController = {
                 }
             }
             const nearbyDrivers = await bookingService.findNearbyDrivers(source);
-            logger.info(`Nearby Drivers controller: ${nearbyDrivers}`);
             await locationService.storeNotifiedDrivers(booking._id as mongoose.Schema.Types.ObjectId, driverIds);
             logger.info(`Booking created Successfully: ${booking}`);
             res.status(201).send({ data: booking, success: true, error: null, message: "successfully created booking" });
@@ -56,7 +55,7 @@ export const bookingController = {
         }
     },
 
-    confirmBooking: (oi: any) => async (req: Request, res: Response) => {
+    confirmBooking: (socket: any) => async (req: Request, res: Response) => {
         try {
             const { bookingId } = req.body;
             const user = req.user as IUser;

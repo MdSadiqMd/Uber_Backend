@@ -16,7 +16,6 @@ export const driverController = {
             }
 
             const bookings = await driverService.getDriverBookings(userId);
-            logger.info(`Retrieved Driver details Succesfully`);
             res.status(200).send({
                 data: bookings,
                 success: true,
@@ -44,7 +43,6 @@ export const driverController = {
                 return;
             }
             await driverService.updateLocation(userId, { latitude, longitude } as ILocation);
-            logger.info(`Location Updated Successfully`);
             res.status(200).send({
                 success: true,
                 error: null,

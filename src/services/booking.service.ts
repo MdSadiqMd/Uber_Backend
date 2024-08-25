@@ -42,7 +42,6 @@ class BookingService {
         }
         logger.info(`Searching for drivers near (${latitude}, ${longitude}) within ${radiusKm} km radius`);
         const nearbyDrivers = await locationService.findNearbyDrivers(longitude, latitude, radiusKm);
-        logger.info(`Nearby drivers found: ${nearbyDrivers.length}`);
         return nearbyDrivers;
     };
 
