@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 
 import { BookingService, locationService } from '../services';
 import { io } from '..';
 import { IUser } from '../types';
-import { logger } from '../config';
+import { logger, redisClient } from '../config';
 
 const bookingService = new BookingService();
 
 export const bookingController = {
-    createBooking: (io: any) => async (req: Request, res: Response) => {
+    createBooking: (oi: any) => async (req: Request, res: Response) => {
         try {
             const { source, destination } = req.body;
             const user = req.user;
@@ -24,20 +25,29 @@ export const bookingController = {
 
             const driverIds: string[] = [];
 
-            const nearbyDrivers = await bookingService.findNearbyDrivers(source);
-            for (const driver of nearbyDrivers) {
-                const driverSocketId = await locationService.getDriverSocket(driver[0]);
+            const keys: any = await redisClient.sendCommand(['KEYS', '*']);
+            for (const driver of keys) {
+                // Skipping non-driver key
+                if (!driver.startsWith('driver:')) {
+                    continue;
+                }
+                const driverId = driver.replace('driver:', '');
+                const driverSocketId = await locationService.getDriverSocket(driverId);
                 if (driverSocketId) {
-                    driverIds.push(driver[0]);
+                    driverIds.push(driverId);
                     io.to(driverSocketId).emit('newBooking', {
                         bookingId: booking._id,
                         source,
                         destination,
                         fare: booking.fare,
                     });
+                } else {
+                    logger.error(`No socket ID found for driver: ${driverId}`);
                 }
             }
-            await locationService.storeNotifiedDrivers(booking._id as string, driverIds);
+            const nearbyDrivers = await bookingService.findNearbyDrivers(source);
+            logger.info(`Nearby Drivers controller: ${nearbyDrivers}`);
+            await locationService.storeNotifiedDrivers(booking._id as mongoose.Schema.Types.ObjectId, driverIds);
             logger.info(`Booking created Successfully: ${booking}`);
             res.status(201).send({ data: booking, success: true, error: null, message: "successfully created booking" });
         } catch (error: any) {
@@ -46,7 +56,7 @@ export const bookingController = {
         }
     },
 
-    confirmBooking: (io: any) => async (req: Request, res: Response) => {
+    confirmBooking: (oi: any) => async (req: Request, res: Response) => {
         try {
             const { bookingId } = req.body;
             const user = req.user as IUser;

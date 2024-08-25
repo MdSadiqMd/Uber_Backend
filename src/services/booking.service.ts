@@ -40,9 +40,12 @@ class BookingService {
         if (isNaN(longitude) || isNaN(latitude) || isNaN(radiusKm)) {
             throw new Error('Invalid coordinates or radius');
         }
+        logger.info(`Searching for drivers near (${latitude}, ${longitude}) within ${radiusKm} km radius`);
         const nearbyDrivers = await locationService.findNearbyDrivers(longitude, latitude, radiusKm);
+        logger.info(`Nearby drivers found: ${nearbyDrivers.length}`);
         return nearbyDrivers;
     };
+
 
     async assignDriver(bookingId: string, driverId: string) {
         const booking = await this.bookingRepository.updateBookingStatus(bookingId as unknown as mongoose.Schema.Types.ObjectId, driverId as unknown as mongoose.Schema.Types.ObjectId, 'confirmed');
