@@ -5,24 +5,26 @@ import { io } from '..';
 import { IUser } from '../types';
 import { logger } from '../config';
 
+const bookingService = new BookingService();
+
 export const bookingController = {
     createBooking: (io: any) => async (req: Request, res: Response) => {
         try {
             const { source, destination } = req.body;
-            const user = req.user as IUser;
+            const user = req.user;
             if (!user || !user._id) {
                 res.status(400).send({ success: false, error: 'User not authenticated', message: null });
                 return;
             }
-            const booking = await BookingService.createBooking({
-                passengerId: user._id,
+            const booking = await bookingService.createBooking({
+                passenger: user._id,
                 source,
                 destination,
             });
 
             const driverIds: string[] = [];
 
-            const nearbyDrivers = await BookingService.findNearbyDrivers(source);
+            const nearbyDrivers = await bookingService.findNearbyDrivers(source);
             for (const driver of nearbyDrivers) {
                 const driverSocketId = await locationService.getDriverSocket(driver[0]);
                 if (driverSocketId) {
@@ -35,7 +37,7 @@ export const bookingController = {
                     });
                 }
             }
-            await locationService.storeNotifiedDrivers(booking._id, driverIds);
+            await locationService.storeNotifiedDrivers(booking._id as string, driverIds);
             logger.info(`Booking created Successfully: ${booking}`);
             res.status(201).send({ data: booking, success: true, error: null, message: "successfully created booking" });
         } catch (error: any) {
@@ -52,7 +54,7 @@ export const bookingController = {
                 res.status(400).send({ success: false, error: 'User not authenticated', message: null });
                 return;
             }
-            const booking = await BookingService.assignDriver(bookingId, user._id);
+            const booking = await bookingService.assignDriver(bookingId, String(user._id));
             const notifiedDriverIds = await locationService.getNotifiedDrivers(bookingId);
             for (const driverId of notifiedDriverIds) {
                 const driverSocketId = await locationService.getDriverSocket(driverId);
