@@ -1,7 +1,8 @@
 import { ObjectId } from "mongoose";
+import { RedisClientType } from "redis";
 
 import { redisClient } from "../config/redis.config";
-import { RedisClientType } from "redis";
+import { logger } from "../config";
 
 class LocationService {
     private redisClient: RedisClientType<any>;
@@ -32,7 +33,6 @@ class LocationService {
             'km',
             'WITHCOORD',
         ]);
-
         return nearbyDrivers as string[][];
     }
 
@@ -45,8 +45,8 @@ class LocationService {
                 longitude.toString(),
                 driverId,
             ]);
-        } catch (error) {
-            console.log('Cannot add to redis', error);
+        } catch (error: any) {
+            logger.error(`Error in add Driver Location to Redis: ${error}`);
         }
     }
 
@@ -57,7 +57,7 @@ class LocationService {
     async storeNotifiedDrivers(bookingId: string, driverIds: string[]): Promise<void> {
         for (const driverId of driverIds) {
             const addedCount = await this.redisClient.sAdd(`notifiedDrivers:${bookingId}`, driverId);
-            console.log(`Added driver ${driverId} to the set for booking ${bookingId}, result: ${addedCount}`);
+            logger.info(`Added driver ${driverId} to the set for booking ${bookingId}, result: ${addedCount}`);
         }
     }
 

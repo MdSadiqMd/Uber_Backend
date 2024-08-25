@@ -3,16 +3,11 @@ import mongoose from 'mongoose';
 import { locationService } from './location.service';
 import { BookingRepository } from '../repositories';
 import haversineDistance from '../utils/haversineDistance.util';
-import { IBooking } from '../types';
+import { IBooking, ILocation } from '../types';
 import { logger } from '../config';
 
 const BASIC_FARE = 50;
 const RATE_PER_KM = 12;
-
-interface Location {
-    latitude: number;
-    longitude: number;
-}
 
 class BookingService {
     private bookingRepository: BookingRepository;
@@ -21,7 +16,7 @@ class BookingService {
         this.bookingRepository = new BookingRepository();
     }
 
-    async createBooking({ passenger, source, destination }: { passenger: mongoose.Schema.Types.ObjectId, source: Location, destination: Location; }): Promise<IBooking> {
+    async createBooking({ passenger, source, destination }: { passenger: mongoose.Schema.Types.ObjectId, source: ILocation, destination: ILocation; }): Promise<IBooking> {
         const distance = haversineDistance(source.latitude, source.longitude, destination.latitude, destination.longitude);
         logger.info(`Distance of ride is ${distance}`);
         const fare = BASIC_FARE + (distance * RATE_PER_KM);
@@ -37,7 +32,7 @@ class BookingService {
         return booking;
     };
 
-    async findNearbyDrivers(location: Location, radius: number = 5): Promise<string[][]> {
+    async findNearbyDrivers(location: ILocation, radius: number = 5): Promise<string[][]> {
         const longitude = parseFloat(location.longitude.toString());
         const latitude = parseFloat(location.latitude.toString());
         const radiusKm = parseFloat(radius.toString());
